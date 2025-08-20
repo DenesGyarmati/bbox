@@ -1,4 +1,4 @@
-import axios from "@/lib/api/axios";
+import { apiGet } from "@/lib/api/axios";
 import Link from "next/link";
 
 interface Event {
@@ -8,13 +8,9 @@ interface Event {
 }
 
 export default async function HomePage() {
-  let events: Event[] = [];
-  try {
-    const response = await axios.get("/events?page=1&per_page=12");
-    events = response.data;
-  } catch (err) {
-    console.error("Error:", err);
-  }
+  const { data, error } = await apiGet("/events?page=1&per_page=12");
+  const events: Event[] = data.data;
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-6">Upcoming Events</h1>

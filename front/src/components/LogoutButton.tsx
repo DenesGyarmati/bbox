@@ -9,6 +9,7 @@ export default function LogoutButton() {
     await fetch("/api/logout", {
       method: "POST",
     });
+    router.push("/");
     router.refresh();
   };
 

@@ -12,10 +12,11 @@ class Event extends Model
     protected $fillable = [
         'owner_id',
         'title',
-        'desctiption',
+        'description',
         'starts_at',
         'location',
         'capacity',
+        'price',
         'category',
         'status',
     ];
@@ -24,8 +25,13 @@ class Event extends Model
         'starts_at' => 'datetime',
     ];
 
-    public function tickets()
+    public function owner()
     {
-        return $this->hasMany(Ticket::class);
+        return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function reservations()
+    {
+        return $this->hasMany(Reservation::class);
     }
 }

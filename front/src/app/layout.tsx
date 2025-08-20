@@ -12,6 +12,9 @@ interface RootLayoutProps {
 export default async function RootLayout({ children }: RootLayoutProps) {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
+  const userName = cookieStore.get("user_name")?.value;
+  const roleCookie = cookieStore.get("role_id");
+  const roleId = roleCookie ? parseInt(roleCookie.value) : null;
 
   let isLoggedIn = false;
 
@@ -35,9 +38,37 @@ export default async function RootLayout({ children }: RootLayoutProps) {
             <Link href="/" className="text-xl font-bold">
               Home
             </Link>
+            {roleId === 1 && (
+              <>
+                <Link href="/admin/events" className="text-xl font-bold">
+                  Events
+                </Link>
+                <Link href="/admin/users" className="text-xl font-bold">
+                  Users
+                </Link>
+              </>
+            )}
+            {roleId === 2 && (
+              <>
+                <Link href="/events/my" className="text-xl font-bold">
+                  My Events
+                </Link>
+                <Link href="/event/create" className="text-xl font-bold">
+                  Create Event
+                </Link>
+              </>
+            )}
+            {roleId === 2 && (
+              <Link href="/reservations" className="text-xl font-bold">
+                Reservations
+              </Link>
+            )}
             <nav>
               {isLoggedIn ? (
-                <LogoutButton />
+                <>
+                  <span>{userName}</span>
+                  <LogoutButton />
+                </>
               ) : (
                 <div className="space-x-4">
                   <Link

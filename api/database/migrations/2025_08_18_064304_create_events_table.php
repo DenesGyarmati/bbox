@@ -18,7 +18,8 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->dateTime('starts_at'); 
             $table->string('location')->nullable(); 
-            $table->integer('capacity')->nullable(); 
+            $table->integer('capacity')->nullable();
+            $table->decimal('price', 8, 2)->default(0);
             $table->string('category')->nullable(); 
             $table->enum('status', ['draft', 'published', 'cancelled'])->default('draft'); 
             $table->timestamps(); 

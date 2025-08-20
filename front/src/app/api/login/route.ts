@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import axios from "axios";
 import { AuthEP } from "@/lib/api/ep";
+import { setAuthCookies } from "@/lib/cookies";
 
 export async function POST(req: Request) {
   try {
@@ -13,17 +14,15 @@ export async function POST(req: Request) {
       }
     );
 
-    const token = data.access_token;
+    console.log(data);
 
     const response = NextResponse.json({ success: true, user: data.user });
-    response.cookies.set({
-      name: "token",
-      value: token,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: data.expires_in,
+    setAuthCookies(response, {
+      token: data.access_token,
+      userName: data.user.name,
+      roleId: data.user.role_id,
+      expiresIn: data.expires_in,
+      userId: data.user.id,
     });
 
     return response;

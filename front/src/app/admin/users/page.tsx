@@ -1,5 +1,5 @@
 import AdminAction from "@/components/AdminAction";
-import axios from "@/lib/api/axios";
+import { apiGet } from "@/lib/api/axios";
 import { AdminEP } from "@/lib/api/ep";
 
 interface Role {
@@ -20,7 +20,8 @@ export default async function UsersPage() {
   let error = "";
 
   try {
-    users = await axios.get<User[]>(AdminEP.USERS);
+    const { data } = await apiGet<User[]>(AdminEP.USERS);
+    users = data ? data : [];
   } catch (err: any) {
     console.log(err);
     error =

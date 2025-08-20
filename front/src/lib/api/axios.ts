@@ -1,5 +1,20 @@
-import axios, { AxiosResponse, InternalAxiosRequestConfig } from "axios";
+import axios, {
+  AxiosError,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from "axios";
 import { cookies } from "next/headers";
+
+interface NormalizedError {
+  status: number;
+  message: string;
+  data: any | null;
+}
+
+interface ErrorResponse {
+  message?: string;
+  [key: string]: any;
+}
 
 const axiosServer = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -12,9 +27,7 @@ const axiosServer = axios.create({
 // Do not touch this!
 axiosServer.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
-    if (!config.headers) {
-      return config;
-    }
+    if (!config.headers) return config;
 
     const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value;
@@ -31,12 +44,34 @@ axiosServer.interceptors.request.use(
 
 axiosServer.interceptors.response.use(
   (response: AxiosResponse) => response.data,
-  (error) => Promise.reject(error)
+  (error: AxiosError<ErrorResponse>) => {
+    const normalizedError: NormalizedError = {
+      status: error.response?.status || 500,
+      message: error.response?.data?.message || error.message || "Server error",
+      data: error.response?.data || null,
+    };
+    return Promise.reject(normalizedError);
+  }
 );
 
-export default axiosServer as {
-  get<T = any>(url: string, config?: any): Promise<T>;
-  post<T = any>(url: string, data?: any, config?: any): Promise<T>;
-  put<T = any>(url: string, data?: any, config?: any): Promise<T>;
-  delete<T = any>(url: string, config?: any): Promise<T>;
-};
+async function axiosWrapper<T = any>(
+  request: Promise<any>
+): Promise<{ data: T | null; error: NormalizedError | null }> {
+  try {
+    const data: T = await request;
+    return { data, error: null };
+  } catch (error: any) {
+    return { data: null, error };
+  }
+}
+
+export const apiGet = <T = any>(url: string) =>
+  axiosWrapper<T>(axiosServer.get<T>(url));
+export const apiPost = <T = any>(url: string, data?: any) =>
+  axiosWrapper<T>(axiosServer.post<T>(url, data));
+export const apiPut = <T = any>(url: string, data?: any) =>
+  axiosWrapper<T>(axiosServer.put<T>(url, data));
+export const apiPatch = <T = any>(url: string, data?: any) =>
+  axiosWrapper<T>(axiosServer.patch<T>(url, data));
+export const apiDelete = <T = any>(url: string) =>
+  axiosWrapper<T>(axiosServer.delete<T>(url));

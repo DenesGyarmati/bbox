@@ -2,10 +2,17 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { eventSchema, EventFormValues } from "@/lib/validation/eventSchema";
+import { EventFormValues, eventSchema } from "@/lib/validation/eventSchema";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default function CreateEventPage() {
+interface Props {
+  eventId: string;
+  initialData: EventFormValues;
+}
+
+export default function EditEventForm({ eventId, initialData }: Props) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   const {
@@ -14,28 +21,25 @@ export default function CreateEventPage() {
     formState: { errors },
   } = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
-    defaultValues: {
-      status: "draft",
-    },
+    defaultValues: initialData,
   });
 
   const onSubmit = async (data: EventFormValues) => {
     setLoading(true);
     try {
-      const res = await fetch("/api/events", {
-        method: "POST",
+      const res = await fetch(`/api/events/${eventId}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
 
       if (!res.ok) {
         const err = await res.json();
-        console.error("Failed to create event:", err);
+        console.error("Failed to update event:", err);
         return;
       }
 
-      const createdEvent = await res.json();
-      console.log("Event created:", createdEvent);
+      router.push(`/event/${eventId}`);
     } catch (err) {
       console.error("Unexpected error:", err);
     } finally {
@@ -45,8 +49,7 @@ export default function CreateEventPage() {
 
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Create New Event</h1>
-
+      <h1 className="text-2xl font-bold mb-6">Edit Event</h1>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <input
           {...register("title")}
@@ -75,9 +78,17 @@ export default function CreateEventPage() {
           placeholder="Location"
           className="w-full p-2 border rounded"
         />
+        <input
+          {...register("category")}
+          placeholder="Category"
+          className="w-full p-2 border rounded"
+        />
 
         <input
-          {...register("capacity", { valueAsNumber: true })}
+          {...register("capacity", {
+            valueAsNumber: true,
+            min: initialData.capacity,
+          })}
           type="number"
           placeholder="Capacity"
           className="w-full p-2 border rounded"
@@ -87,12 +98,7 @@ export default function CreateEventPage() {
           type="number"
           placeholder="Price"
           className="w-full p-2 border rounded"
-        />
-
-        <input
-          {...register("category")}
-          placeholder="Category"
-          className="w-full p-2 border rounded"
+          disabled
         />
 
         <select {...register("status")} className="w-full p-2 border rounded">
@@ -106,7 +112,7 @@ export default function CreateEventPage() {
           disabled={loading}
           className="w-full bg-green-600 text-white p-2 rounded"
         >
-          {loading ? "Creating..." : "Create Event"}
+          {loading ? "Updating..." : "Update Event"}
         </button>
       </form>
     </div>

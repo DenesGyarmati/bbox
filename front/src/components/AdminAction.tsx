@@ -9,12 +9,11 @@ export default function AdminAction({
 }) {
   const toggleStatus = async () => {
     try {
-      await fetch(`/api/users/${id}/toggle`, {
+      await fetch(`/api/admin/${id}/toggle`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ is_active: !isActive }),
       });
-
       window.location.reload();
     } catch (err) {
       console.error("Failed to update user status", err);

@@ -1,22 +1,23 @@
 import { NextResponse } from "next/server";
-import axios from "@/lib/api/axios";
+import { apiPatch } from "@/lib/api/axios";
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(req: Request, context: { params: { id: string } }) {
   try {
+    const { params } = await context;
+    const userId = params.id;
+
     const body = await req.json();
     const { is_active } = body;
 
-    const response = await axios.post(`/users/${params.id}`, { is_active });
+    const data = await apiPatch(`/users/${userId}/activate`, { is_active });
 
-    return NextResponse.json(response);
+    return NextResponse.json(data);
   } catch (error: any) {
-    console.error("Proxy error:", error.response?.data || error.message);
+    console.error("Proxy error:", error);
+
     return NextResponse.json(
-      { error: error.response?.data || "Failed to toggle user status" },
-      { status: error.response?.status || 500 }
+      { error: error?.response?.data || "Failed to toggle user status" },
+      { status: error?.response?.status || 500 }
     );
   }
 }

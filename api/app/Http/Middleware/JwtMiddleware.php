@@ -3,7 +3,6 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use Exception;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Tymon\JWTAuth\Facades\JWTAuth;
@@ -22,6 +21,7 @@ class JwtMiddleware
             if (!$user = JWTAuth::parseToken()->authenticate()) {
                 return response()->json(['error' => 'User not found'], 404);
             }
+            $request->merge(['user' => $user]);
         } catch (JWTException $e) {
             return response()->json(['error' => 'Token is invalid'], 401);
         }

@@ -111,4 +111,21 @@ class UserController extends Controller
 
         return response()->json($users);
     }
+
+    public function activate(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        if ($request->has('is_active')) {
+            $user->is_active = $request->input('is_active');
+        } else {
+            $user->is_active = !$user->is_active;
+        }
+
+        $user->save();
+
+        return response()->json([
+            'message' => $user->is_active ? 'User activated successfully' : 'User deactivated successfully',
+            'user' => $user
+        ]);
+    }
 }
