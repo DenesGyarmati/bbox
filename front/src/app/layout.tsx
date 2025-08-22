@@ -32,63 +32,87 @@ export default async function RootLayout({ children }: RootLayoutProps) {
 
   return (
     <html lang="en">
-      <body className="bg-gray-100 min-h-screen">
-        <header className="bg-white shadow-md">
-          <div className="container mx-auto flex justify-between items-center p-4">
-            <Link href="/" className="text-xl font-bold">
-              Home
-            </Link>
-            {roleId === 1 && (
-              <>
-                <Link href="/admin/events" className="text-xl font-bold">
-                  Events
-                </Link>
-                <Link href="/admin/users" className="text-xl font-bold">
-                  Users
-                </Link>
-              </>
-            )}
-            {roleId === 2 && (
-              <>
-                <Link href="/events/my" className="text-xl font-bold">
-                  My Events
-                </Link>
-                <Link href="/event/create" className="text-xl font-bold">
-                  Create Event
-                </Link>
-              </>
-            )}
-            {roleId === 2 && (
-              <Link href="/reservations" className="text-xl font-bold">
-                Reservations
+      <body className="bg-gray-100 min-h-screen text-gray-800">
+        <header className="bg-white shadow-md sticky top-0 z-50">
+          <div className="container mx-auto flex justify-between items-center px-6 py-4">
+            <div className="flex items-center gap-8">
+              <Link
+                href="/"
+                className="text-2xl font-bold text-gray-900 hover:text-gray-700 transition"
+              >
+                Home
               </Link>
-            )}
-            <nav>
+              <nav className="flex items-center gap-6 text-gray-700 font-medium">
+                {roleId === 1 && (
+                  <>
+                    <Link
+                      href="/admin/events"
+                      className="hover:text-black transition"
+                    >
+                      Events
+                    </Link>
+                    <Link
+                      href="/admin/users"
+                      className="hover:text-black transition"
+                    >
+                      Users
+                    </Link>
+                  </>
+                )}
+                {roleId === 2 && (
+                  <>
+                    <Link
+                      href="/events/my"
+                      className="hover:text-black transition"
+                    >
+                      My Events
+                    </Link>
+                    <Link
+                      href="/event/create"
+                      className="hover:text-black transition"
+                    >
+                      Create Event
+                    </Link>
+                  </>
+                )}
+                {roleId && (
+                  <Link
+                    href="/reservations"
+                    className="hover:text-black transition"
+                  >
+                    Reservations
+                  </Link>
+                )}
+              </nav>
+            </div>
+            <div className="flex items-center gap-4">
               {isLoggedIn ? (
-                <>
-                  <span>{userName}</span>
+                <div className="flex items-center gap-3">
+                  <span className="font-medium text-gray-600">
+                    Welcome {userName}
+                  </span>
                   <LogoutButton />
-                </>
+                </div>
               ) : (
-                <div className="space-x-4">
+                <div className="flex items-center gap-3">
                   <Link
                     href="/login"
-                    className="px-4 py-2 bg-blue-500 text-white rounded"
+                    className="px-4 py-2 bg-gray-900 text-white rounded-lg shadow hover:bg-gray-700 transition"
                   >
                     Login
                   </Link>
                   <Link
                     href="/register"
-                    className="px-4 py-2 bg-green-500 text-white rounded"
+                    className="px-4 py-2 bg-gray-700 text-white rounded-lg shadow hover:bg-gray-900 transition"
                   >
                     Register
                   </Link>
                 </div>
               )}
-            </nav>
+            </div>
           </div>
         </header>
-        <main className="container mx-auto p-4">{children}</main>
+        <main className="container mx-auto px-6 py-8">{children}</main>
       </body>
     </html>
   );

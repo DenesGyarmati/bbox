@@ -23,10 +23,5 @@ export default async function AdminLayout({
     redirect("/login");
   }
 
-  return (
-    <section>
-      <h1 className="text-2xl font-bold">Admin Panel</h1>
-      {children}
-    </section>
-  );
+  return <section>{children}</section>;
 }

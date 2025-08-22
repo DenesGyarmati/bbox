@@ -11,6 +11,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/roles', [AuthController::class, 'roles']);
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/filter', [EventController::class, 'filter']);
     Route::get('/event/{id}', [EventController::class, 'show'])->middleware(['user']);
     // only auth
     Route::middleware(['jwt'])->group(function () {
@@ -26,5 +27,6 @@ Route::prefix('v1')->group(function () {
             Route::patch('/events/{event}/status', [EventController::class, 'status']);
         });
         Route::post('/reserve/{event}', [ReservationController::class, 'reserve']);
+        Route::get('/reservations', [ReservationController::class, 'reservations']);
     });
 });

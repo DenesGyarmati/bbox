@@ -61,4 +61,16 @@ class ReservationController extends Controller
             'reservation' => $reservation,
         ], 201);
     }
+
+    public function reservations(Request $request)
+    {
+        $userId = $request->user->id;
+        
+        $reservations = Reservation::where('user_id', $userId)
+            ->with('event:id,title')
+            ->paginate(12);
+
+        return response()->json($reservations);
+
+    }
 }

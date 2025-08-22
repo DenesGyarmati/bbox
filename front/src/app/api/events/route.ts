@@ -30,19 +30,23 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   try {
-    // Extract query params from request URL
     const { searchParams } = new URL(req.url);
 
     const page = searchParams.get("page") || "1";
     const perPage = searchParams.get("per_page") || "12";
     const search = searchParams.get("search") || "";
+    const location = searchParams.get("location") || "";
+    const category = searchParams.get("category") || "";
 
-    // Forward the query params to your backend API
-    const { data, error } = await apiGet(
-      `/events?page=${page}&per_page=${perPage}&search=${encodeURIComponent(
-        search
-      )}`
-    );
+    const query = new URLSearchParams({
+      page,
+      per_page: perPage,
+      search,
+      ...(location && { location }),
+      ...(category && { category }),
+    });
+
+    const { data, error } = await apiGet(`/events?${query.toString()}`);
 
     if (error) {
       return NextResponse.json(

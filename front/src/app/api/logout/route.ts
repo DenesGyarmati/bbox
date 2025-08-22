@@ -2,7 +2,7 @@ import { setAuthCookies } from "@/lib/cookies";
 import { NextResponse } from "next/server";
 
 export async function POST() {
-  const response = NextResponse.json({ success: true });
+  const response = NextResponse.redirect(new URL("/", "http://localhost:3000"));
   setAuthCookies(response, {
     token: "",
     userName: "",

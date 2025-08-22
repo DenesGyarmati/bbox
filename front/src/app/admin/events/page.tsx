@@ -1,6 +1,4 @@
-import AdminAction from "@/components/AdminAction";
 import { apiGet } from "@/lib/api/axios";
-import { AdminEP } from "@/lib/api/ep";
 
 interface Reservation {
   id: number;
@@ -44,8 +42,8 @@ export default async function EventsPage() {
   console.log(events);
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <h1 className="text-3xl font-bold mb-6">Events</h1>
+    <>
+      <h1 className="text-3xl font-bold mb-6">Admin - Events</h1>
 
       {error && <p className="text-red-500 mb-4">{error}</p>}
 
@@ -56,53 +54,60 @@ export default async function EventsPage() {
               key={event.id}
               className="bg-white rounded-lg shadow-md p-6 space-y-4"
             >
-              {/* Event info */}
               <div>
-                <h2 className="text-2xl font-semibold mb-2">{event.title}</h2>
-                <p className="mb-2">{event.description}</p>
-                <p>
+                <h2 className="text-2xl font-semibold mb-2 text-gray-900">
+                  {event.title}
+                </h2>
+                <p className="mb-2 text-gray-900">{event.description}</p>
+                <p className="text-gray-900">
                   <strong>Starts at:</strong>{" "}
                   {new Date(event.starts_at).toLocaleString()}
                 </p>
-                <p>
+                <p className="text-gray-900">
                   <strong>Location:</strong> {event.location || "N/A"}
                 </p>
-                <p>
+                <p className="text-gray-900">
                   <strong>Capacity:</strong> {event.capacity || "N/A"}
                 </p>
-                <p>
+                <p className="text-gray-900">
                   <strong>Price:</strong> {event.price ?? "Free"}
                 </p>
-                <p>
+                <p className="text-gray-900">
                   <strong>Category:</strong> {event.category || "N/A"}
                 </p>
-                <p>
+                <p className="text-gray-900">
                   <strong>Status:</strong> {event.status}
                 </p>
               </div>
-
-              {/* Reservations table */}
               {event.reservations.length > 0 ? (
                 <div>
                   <h3 className="text-xl font-semibold mb-3">Reservations</h3>
                   <table className="w-full border-collapse bg-gray-50 rounded-lg overflow-hidden">
                     <thead className="bg-gray-200">
                       <tr>
-                        <th className="p-3 text-left">User</th>
-                        <th className="p-3 text-left">Quantity</th>
-                        <th className="p-3 text-left">Created At</th>
-                        <th className="p-3 text-left">Updated At</th>
+                        <th className="p-3 text-left text-gray-900">User</th>
+                        <th className="p-3 text-left text-gray-900">
+                          Quantity
+                        </th>
+                        <th className="p-3 text-left text-gray-900">
+                          Created At
+                        </th>
+                        <th className="p-3 text-left text-gray-900">
+                          Updated At
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {event.reservations.map((res: Reservation) => (
                         <tr key={res.id} className="border-b hover:bg-gray-100">
-                          <td className="p-3">{res.user?.name || "Unknown"}</td>
-                          <td className="p-3">{res.quantity}</td>
-                          <td className="p-3">
+                          <td className="p-3 text-gray-900">
+                            {res.user?.name || "Unknown"}
+                          </td>
+                          <td className="p-3 text-gray-900">{res.quantity}</td>
+                          <td className="p-3 text-gray-900">
                             {new Date(res.created_at).toLocaleString()}
                           </td>
-                          <td className="p-3">
+                          <td className="p-3 text-gray-900">
                             {new Date(res.updated_at).toLocaleString()}
                           </td>
                         </tr>
@@ -119,6 +124,6 @@ export default async function EventsPage() {
       ) : !error ? (
         <p>Loading events...</p>
       ) : null}
-    </div>
+    </>
   );
 }

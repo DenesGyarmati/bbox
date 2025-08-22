@@ -14,21 +14,29 @@ class EventController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
+    $location = $request->input('location');
+    $category = $request->input('category');
+    $perPage = $request->input('per_page', 12);
+    $page = $request->input('page', 1);
 
-        $events = Event::with('reservations')
-            ->where('status', 'published')
-            ->when($search, function ($query, $search) {
-                $search = strtolower($search);
-                $query->where(function ($q) use ($search) {
-                    $q->whereRaw('LOWER(title) LIKE ?', ["%{$search}%"])
-                        ->orWhereRaw('LOWER(location) LIKE ?', ["%{$search}%"])
-                        ->orWhereRaw('LOWER(category) LIKE ?', ["%{$search}%"]);
-                });
-            })
-            ->orderBy('starts_at', 'asc')
-            ->paginate(12);
+    $events = Event::with('reservations')
+        ->where('status', 'published')
+        ->when($search, function ($query, $search) {
+            $search = strtolower($search);
+            $query->where(function ($q) use ($search) {
+                $q->whereRaw('LOWER(title) LIKE ?', ["%{$search}%"]);
+            });
+        })
+        ->when($location, function ($query, $location) {
+            $query->where('location', $location);
+        })
+        ->when($category, function ($query, $category) {
+            $query->where('category', $category);
+        })
+        ->orderBy('starts_at', 'asc')
+        ->paginate($perPage, ['*'], 'page', $page);
 
-        return response()->json($events);
+    return response()->json($events);
     }
 
     /**
@@ -168,5 +176,25 @@ class EventController extends Controller
         }
 
         return response()->json($event);
+    }
+
+    public function filter(Request $request)
+    {
+        $locations = Event::where('status', 'published')
+            ->distinct()
+            ->pluck('location')
+            ->filter()
+            ->values();
+
+        $categories = Event::where('status', 'published')
+            ->distinct()
+            ->pluck('category')
+            ->filter()
+            ->values();
+
+        return [
+            'locations' => $locations,
+            'categories' => $categories,
+        ];
     }
 }
