@@ -44,17 +44,15 @@ export function setAuthCookies(response: NextResponse, options: CookieOptions) {
     });
   }
 
-  if (userId) {
-    response.cookies.set({
-      name: "user_id",
-      value: userId.toString(),
-      httpOnly: false,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: expiresIn,
-    });
-  }
+  response.cookies.set({
+    name: "user_id",
+    value: userId ? userId.toString() : "",
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: expiresIn,
+  });
 
   return response;
 }

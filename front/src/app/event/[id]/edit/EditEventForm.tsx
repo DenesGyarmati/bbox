@@ -32,13 +32,13 @@ export default function EditEventForm({ eventId, initialData }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-
       if (!res.ok) {
         const err = await res.json();
         console.error("Failed to update event:", err);
         return;
       }
-
+      const createdEvent = await res.json();
+      console.log("Event updated:", createdEvent);
       router.push(`/event/${eventId}`);
     } catch (err) {
       console.error("Unexpected error:", err);

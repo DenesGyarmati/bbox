@@ -10,12 +10,12 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
-class UserController extends Controller
+class AuthController extends Controller
 {
     /**
      * Returns the role options
      */
-    public function roles(Request $request)
+    public function roles()
     {
         return Role::select('id', 'name')->get();
     }
@@ -98,34 +98,5 @@ class UserController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Could not create token'], 500);
         }
-    }
-
-    /**
-     * List out all users with all relevant data for the admin users.
-     */
-    public function index()
-    {
-        $users = User::with('role:id,name')
-        ->select('id', 'name', 'email', 'is_active', 'created_at', 'role_id')
-        ->get();
-
-        return response()->json($users);
-    }
-
-    public function activate(Request $request, $id)
-    {
-        $user = User::findOrFail($id);
-        if ($request->has('is_active')) {
-            $user->is_active = $request->input('is_active');
-        } else {
-            $user->is_active = !$user->is_active;
-        }
-
-        $user->save();
-
-        return response()->json([
-            'message' => $user->is_active ? 'User activated successfully' : 'User deactivated successfully',
-            'user' => $user
-        ]);
     }
 }

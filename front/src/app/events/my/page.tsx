@@ -1,5 +1,5 @@
 import { apiGet } from "@/lib/api/axios";
-import Link from "next/link";
+import EventActions from "@/components/EventActions"; // client component
 
 interface Event {
   id: number;
@@ -25,12 +25,6 @@ export default async function MyEventsPage() {
       hour: "2-digit",
       minute: "2-digit",
     });
-
-  const getPublishButtonLabel = (status: Event["status"]) => {
-    if (status === "published") return "Unpublish";
-    if (status === "draft") return "Publish";
-    return null;
-  };
 
   return (
     <div className="space-y-6">
@@ -75,25 +69,18 @@ export default async function MyEventsPage() {
               </span>
             </p>
           </div>
+
+          {/* Edit button stays in server component */}
           <div className="mt-4 flex gap-2">
-            <Link
+            <a
               href={`/event/${event.id}/edit`}
               className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
             >
               Edit
-            </Link>
+            </a>
 
-            {event.status !== "cancelled" && (
-              <button className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">
-                Cancel
-              </button>
-            )}
-
-            {event.status !== "cancelled" && (
-              <button className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600">
-                {getPublishButtonLabel(event.status)}
-              </button>
-            )}
+            {/* Only the interactive buttons are client-side */}
+            <EventActions event={event} />
           </div>
         </div>
       ))}

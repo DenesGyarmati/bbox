@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'jwt'    => \App\Http\Middleware\JwtMiddleware::class,
             'role'   => \App\Http\Middleware\RoleMiddleware::class,
+            'user' => \App\Http\Middleware\AttachUserMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Event;
-use Tymon\JWTAuth\Facades\JWTAuth;
-use Tymon\JWTAuth\Exceptions\JWTException;
 
 class EventController extends Controller
 {
@@ -15,25 +13,24 @@ class EventController extends Controller
      */
     public function index(Request $request)
     {
-        $userId = null;
+        $search = $request->input('search');
 
-        try {
-            if ($user = JWTAuth::parseToken()->authenticate()) {
-                $userId = $user->id;
-            }
-        } catch (JWTException $e) {}
-
-        $eventsQuery = Event::query()
-            ->orderBy('starts_at', 'asc');
-
-        if ($userId) {
-            $eventsQuery->where('owner_id', '!=', $userId);
-        }
-
-        $events = $eventsQuery->paginate(12);
+        $events = Event::with('reservations')
+            ->where('status', 'published')
+            ->when($search, function ($query, $search) {
+                $search = strtolower($search);
+                $query->where(function ($q) use ($search) {
+                    $q->whereRaw('LOWER(title) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(location) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(category) LIKE ?', ["%{$search}%"]);
+                });
+            })
+            ->orderBy('starts_at', 'asc')
+            ->paginate(12);
 
         return response()->json($events);
     }
+
     /**
      * Organizators events paginates everything to 12/page
      */
@@ -122,18 +119,52 @@ class EventController extends Controller
         ]);
     }
 
+    /**
+     * Update the event status published/draft/cancelled
+     */
+    public function status(Request $request, Event $event)
+    {
+        $userId = $request->user->id;
+
+        if ($event->owner_id !== $userId) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $validated = $request->validate([
+            'status'      => 'required|in:draft,published,cancelled',
+        ]);
+
+        $event->update([
+            'status'  => $validated['status'],
+        ]);
+
+        return response()->json([
+            'message' => 'Event status updated successfully',
+            'event' => $event,
+        ]);
+    }
 
     /**
      * Show a single event by ID
      */
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        $event = Event::with('reservations')->find($id);
+        $userId = optional($request->user)->id;
+        $event = Event::with(['reservations.user:id,name'])->find($id);
 
         if (!$event) {
             return response()->json([
                 'error' => 'Event not found'
             ], 404);
+        }
+
+        if (!$userId) {
+            $event->setRelation('reservations', collect());
+        } elseif ($event->owner_id !== $userId) {
+            $event->setRelation(
+                'reservations',
+                $event->reservations->where('user_id', $userId)->values()
+            );
         }
 
         return response()->json($event);
