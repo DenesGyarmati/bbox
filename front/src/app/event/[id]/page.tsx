@@ -1,31 +1,9 @@
 import { cookies } from "next/headers";
 import { apiGet } from "@/lib/api/axios";
 import ReservationForm from "./ReservationForm";
-
-interface User {
-  id: number;
-  name: string;
-}
-
-interface Reservation {
-  id: number;
-  user: User;
-  quantity: number;
-}
-
-interface Event {
-  id: number;
-  title: string;
-  description?: string;
-  starts_at: string;
-  location?: string;
-  capacity?: number;
-  price: number;
-  category?: string;
-  status: string;
-  owner_id: number;
-  reservations?: Reservation[];
-}
+import Link from "next/link";
+import { formatDate } from "@/lib/helpers/formatDate";
+import { Event } from "@/lib/commonTypes";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -39,31 +17,31 @@ export default async function EventPage({ params }: Props) {
   const { data, error } = await apiGet(`/event/${id}`);
   const event: Event = data;
 
-  console.log(event);
-
   return (
     <div className="max-w-3xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-4">{event.title}</h1>
       <p className="mb-2">{event.description}</p>
       <p>
-        <strong>Starts at:</strong> {new Date(event.starts_at).toLocaleString()}
+        <strong>Starts at:</strong> {formatDate(event.starts_at)}
       </p>
       <p>
         <strong>Location:</strong> {event.location || "N/A"}
       </p>
-      {/* <p>
-        <strong>Capacity:</strong> {event.capacity || "N/A"}
-      </p> */}
       <p>
         <strong>Price:</strong> {event.price || "N/A"}
       </p>
       <p>
         <strong>Category:</strong> {event.category || "N/A"}
       </p>
-      <p>
-        <strong>Status:</strong> {event.status}
-      </p>
       <div className="mt-6">
+        {userId === 0 && (
+          <h4>
+            <Link href="/login" className="underline">
+              Login
+            </Link>{" "}
+            to make reservation for this event!
+          </h4>
+        )}
         {userId != 0 &&
           (userId === event.owner_id ? (
             <p className="text-green-600 font-semibold">

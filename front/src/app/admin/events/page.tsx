@@ -1,28 +1,5 @@
 import { apiGet } from "@/lib/api/axios";
-
-interface Reservation {
-  id: number;
-  quantity: number;
-  created_at: string;
-  updated_at: string;
-  user: {
-    id: number;
-    name: string;
-  };
-}
-
-interface Event {
-  id: number;
-  title: string;
-  description: string;
-  starts_at: string;
-  location: string;
-  capacity: number;
-  price: number;
-  category: string;
-  status: string;
-  reservations: Reservation[];
-}
+import { Event } from "@/lib/commonTypes";
 
 export default async function EventsPage() {
   let events: Event[] = [];
@@ -38,8 +15,6 @@ export default async function EventsPage() {
       err.message ||
       "Failed to fetch users from API";
   }
-
-  console.log(events);
 
   return (
     <>
@@ -79,7 +54,7 @@ export default async function EventsPage() {
                   <strong>Status:</strong> {event.status}
                 </p>
               </div>
-              {event.reservations.length > 0 ? (
+              {event.reservations && event.reservations.length > 0 ? (
                 <div>
                   <h3 className="text-xl font-semibold mb-3">Reservations</h3>
                   <table className="w-full border-collapse bg-gray-50 rounded-lg overflow-hidden">
@@ -98,7 +73,7 @@ export default async function EventsPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {event.reservations.map((res: Reservation) => (
+                      {event.reservations?.map((res) => (
                         <tr key={res.id} className="border-b hover:bg-gray-100">
                           <td className="p-3 text-gray-900">
                             {res.user?.name || "Unknown"}

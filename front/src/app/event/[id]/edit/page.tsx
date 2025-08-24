@@ -1,5 +1,5 @@
 import { apiGet } from "@/lib/api/axios";
-import EditEventForm from "./EditEventForm";
+import EventForm from "../../create/EventForm";
 import { notFound } from "next/navigation";
 
 interface Props {
@@ -25,5 +25,10 @@ export default async function EditEventPage({ params }: Props) {
     status: data.status,
   };
 
-  return <EditEventForm eventId={id} initialData={mappedData} />;
+  return (
+    <div className="max-w-2xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-6">Update Event</h1>
+      <EventForm eventId={id} initialData={mappedData} />
+    </div>
+  );
 }

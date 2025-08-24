@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePopup } from "@/context/PopupContext";
 
 interface Props {
   eventId: number;
@@ -10,6 +11,8 @@ export default function ReservationForm({ eventId }: Props) {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
 
+  const { showPopup } = usePopup();
+
   const handleReserve = async () => {
     setLoading(true);
     try {
@@ -18,7 +21,6 @@ export default function ReservationForm({ eventId }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ event_id: eventId, quantity }),
       });
-      console.log(res);
       if (!res.ok) {
         const err = await res.json();
         console.error("Failed to reserve:", err);
@@ -26,8 +28,12 @@ export default function ReservationForm({ eventId }: Props) {
       }
 
       const result = await res.json();
-      alert("Reservation successful!");
-      console.log("Reservation created:", result);
+      showPopup({
+        title: "Modal Title",
+        body: "This is a modal popup 🎉",
+        status: "info",
+        type: "modal",
+      });
     } catch (err) {
       console.error("Unexpected error:", err);
     } finally {

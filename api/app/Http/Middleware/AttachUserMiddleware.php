@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
 
 class AttachUserMiddleware
 {
@@ -15,8 +16,11 @@ class AttachUserMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = JWTAuth::parseToken()->authenticate();
-        $request->merge(['user' => $user]);
+        try {
+            if ($user = JWTAuth::parseToken()->authenticate()) {
+                $request->merge(['user' => $user]);
+            }
+        } catch (JWTException $e) {}
         return $next($request);
     }
 }

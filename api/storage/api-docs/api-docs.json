@@ -1,0 +1,71 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Event API",
+        "description": "API documentation for managing events",
+        "contact": {
+            "email": "support@example.com"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://my-default-host.com",
+            "description": "API Server"
+        }
+    ],
+    "paths": {
+        "/api/events": {
+            "get": {
+                "summary": "Retrieve a list of events",
+                "operationId": "e529c81e6aaec82f49950a87ed881f57",
+                "responses": {
+                    "200": {
+                        "description": "A list of events",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "title": "Event",
+                                        "required": [
+                                            "id",
+                                            "title",
+                                            "starts_at",
+                                            "status"
+                                        ],
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            },
+                                            "title": {
+                                                "type": "string",
+                                                "example": "Sample Event"
+                                            },
+                                            "starts_at": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "example": "2025-08-23T14:00:00Z"
+                                            },
+                                            "status": {
+                                                "type": "string",
+                                                "enum": [
+                                                    "draft",
+                                                    "published",
+                                                    "cancelled"
+                                                ],
+                                                "example": "published"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

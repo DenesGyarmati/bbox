@@ -8,6 +8,7 @@ import {
   RegisterFormValues,
 } from "@/lib/validation/authSchema";
 import { useRouter } from "next/navigation";
+import { usePopup } from "@/context/PopupContext";
 
 export interface Role {
   id: number;
@@ -20,6 +21,8 @@ interface Props {
 export default function RegisterForm({ roles }: Props) {
   const router = useRouter();
   const [apiError, setApiError] = useState("");
+
+  const { showPopup } = usePopup();
 
   const {
     register,
@@ -50,6 +53,12 @@ export default function RegisterForm({ roles }: Props) {
         setApiError(result.error);
         return;
       }
+      showPopup({
+        status: "success",
+        title: "Successfull registration!",
+        body: "",
+        type: "toast",
+      });
       router.push("/");
       router.refresh();
     } catch (err: any) {

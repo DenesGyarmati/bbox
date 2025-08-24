@@ -5,38 +5,71 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Event;
-
+/**
+ * @OA\Info(
+ *     version="1.0.0",
+ *     title="Event API",
+ *     description="API documentation for managing events",
+ *     @OA\Contact(
+ *         email="support@example.com"
+ *     )
+ * )
+ *
+ * @OA\Server(
+ *     url=L5_SWAGGER_CONST_HOST,
+ *     description="API Server"
+ * )
+ */
 class EventController extends Controller
 {
-    /**
-     * Index function paginates everything to 12/page
+    /** 
+     * @OA\Get(
+     *     path="/api/events",
+     *     summary="Retrieve a list of events",
+     *     @OA\Response(
+     *         response=200,
+     *         description="A list of events",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 type="object",
+     *                 title="Event",
+     *                 required={"id", "title", "starts_at", "status"},
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="title", type="string", example="Sample Event"),
+     *                 @OA\Property(property="starts_at", type="string", format="date-time", example="2025-08-23T14:00:00Z"),
+     *                 @OA\Property(property="status", type="string", enum={"draft", "published", "cancelled"}, example="published")
+     *             )
+     *         )
+     *     )
+     * )
      */
     public function index(Request $request)
     {
         $search = $request->input('search');
-    $location = $request->input('location');
-    $category = $request->input('category');
-    $perPage = $request->input('per_page', 12);
-    $page = $request->input('page', 1);
+        $location = $request->input('location');
+        $category = $request->input('category');
+        $perPage = $request->input('per_page', 12);
+        $page = $request->input('page', 1);
 
-    $events = Event::with('reservations')
-        ->where('status', 'published')
-        ->when($search, function ($query, $search) {
-            $search = strtolower($search);
-            $query->where(function ($q) use ($search) {
-                $q->whereRaw('LOWER(title) LIKE ?', ["%{$search}%"]);
-            });
-        })
-        ->when($location, function ($query, $location) {
-            $query->where('location', $location);
-        })
-        ->when($category, function ($query, $category) {
-            $query->where('category', $category);
-        })
-        ->orderBy('starts_at', 'asc')
-        ->paginate($perPage, ['*'], 'page', $page);
+        $events = Event::with('reservations')
+            ->where('status', 'published')
+            ->when($search, function ($query, $search) {
+                $search = strtolower($search);
+                $query->where(function ($q) use ($search) {
+                    $q->whereRaw('LOWER(title) LIKE ?', ["%{$search}%"]);
+                });
+            })
+            ->when($location, function ($query, $location) {
+                $query->where('location', $location);
+            })
+            ->when($category, function ($query, $category) {
+                $query->where('category', $category);
+            })
+            ->orderBy('starts_at', 'asc')
+            ->paginate($perPage, ['*'], 'page', $page);
 
-    return response()->json($events);
+        return response()->json($events);
     }
 
     /**
@@ -51,11 +84,17 @@ class EventController extends Controller
             ->orderBy('starts_at', 'asc')
             ->paginate(12);
 
+        $page = $request->input('page', 1);
+        $perPage = $request->input('per_page', 12);
+
+        $events = Event::with('reservations')
+            ->where('owner_id', $userId)
+            ->orderBy('starts_at', 'asc')
+            ->paginate($perPage, ['*'], 'page', $page);
+
         return response()->json($events);
     }
-    /**
-     * Save the events
-     */
+    
     public function store(Request $request)
     {
         $userId = $request->user->id;
@@ -88,9 +127,7 @@ class EventController extends Controller
             'event'   => $event,
         ], 201);
     }
-    /**
-     * Update the events
-     */
+    
     public function update(Request $request, Event $event)
     {
         $userId = $request->user->id;
@@ -152,9 +189,7 @@ class EventController extends Controller
         ]);
     }
 
-    /**
-     * Show a single event by ID
-     */
+    
     public function show(Request $request, $id)
     {
         $userId = optional($request->user)->id;

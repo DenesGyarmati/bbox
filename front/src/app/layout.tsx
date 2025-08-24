@@ -4,6 +4,7 @@ import { ReactNode } from "react";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import LogoutButton from "@/components/LogoutButton";
+import { PopupProvider } from "@/context/PopupContext";
 
 interface RootLayoutProps {
   children: ReactNode;
@@ -62,7 +63,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
                 {roleId === 2 && (
                   <>
                     <Link
-                      href="/events/my"
+                      href="/event/my"
                       className="hover:text-black transition"
                     >
                       My Events
@@ -112,7 +113,9 @@ export default async function RootLayout({ children }: RootLayoutProps) {
             </div>
           </div>
         </header>
-        <main className="container mx-auto px-6 py-8">{children}</main>
+        <main className="container mx-auto px-6 py-8">
+          <PopupProvider>{children}</PopupProvider>
+        </main>
       </body>
     </html>
   );
