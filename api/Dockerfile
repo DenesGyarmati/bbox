@@ -1,6 +1,5 @@
 FROM php:8.4-fpm
 
-# Install dependencies
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -8,19 +7,19 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     unzip \
     zip \
+    postgresql-client \
     && docker-php-ext-install pdo pdo_pgsql pgsql zip
 
-# Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Set working directory
 WORKDIR /var/www/html
-
-# Copy project files
 COPY . .
 
-# Install PHP dependencies
 RUN composer install --optimize-autoloader
 
-# Expose port
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+
 EXPOSE 8000

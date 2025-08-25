@@ -8,7 +8,7 @@ DC=docker-compose
 # ==============================
 # Start/Stop Services
 # ==============================
-up:
+up: generate-pgadmin-config
 	@echo "Starting all services..."
 	$(DC) build --no-cache
 	$(DC) up -d
@@ -93,7 +93,7 @@ generate-pgadmin-config:
 	@set -o allexport; \
 		source .env; \
 		set +o allexport; \
-		envsubst < servers.json.tpl > db/servers.json
+		envsubst < db/servers.json.tpl > db/servers.json
 
 # ==============================
 # Help

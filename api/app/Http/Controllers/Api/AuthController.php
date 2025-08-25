@@ -87,6 +87,10 @@ class AuthController extends Controller
             }
 
             $user = JWTAuth::user();
+
+            if (!$user->is_active) {
+                return response()->json(['error' => 'Account is inactive'], 403);
+            }
             $jwt = $this->generateJwt($user);
 
             return response()->json([

@@ -39,7 +39,7 @@ class UserSeeder extends Seeder
             ]
         );
 
-        Event::factory()->count(24)->for($organizerUser, 'owner')->create();
+        // Event::factory()->count(24)->for($organizerUser, 'owner')->create();
 
         User::firstOrCreate(
             ['email' => 'user@eventhub.local'],
