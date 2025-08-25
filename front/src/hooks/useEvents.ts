@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { usePopup } from "@/context/PopupContext";
 
 interface Event {
   id: number;
@@ -19,6 +20,7 @@ export function useEvents({
   category,
   perPage = 12,
 }: UseEventsProps) {
+  const { showError } = usePopup();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -46,7 +48,7 @@ export function useEvents({
         setEvents(data.data || []);
         setTotalPages(Math.ceil((data.total || 0) / perPage));
       } catch (err) {
-        console.error(err);
+        showError({ body: err?.toString() });
         if (active) setEvents([]);
       } finally {
         if (active) setLoading(false);

@@ -1,5 +1,7 @@
 "use client";
 
+import { usePopup } from "@/context/PopupContext";
+
 export default function AdminAction({
   id,
   isActive,
@@ -7,6 +9,7 @@ export default function AdminAction({
   id: number;
   isActive: boolean;
 }) {
+  const { showError } = usePopup();
   const toggleStatus = async () => {
     try {
       await fetch(`/api/admin/${id}/toggle`, {
@@ -16,7 +19,10 @@ export default function AdminAction({
       });
       window.location.reload();
     } catch (err) {
-      console.error("Failed to update user status", err);
+      showError({
+        title: "Failed to update user status",
+        body: err?.toString(),
+      });
     }
   };
 

@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import getUserInfo from "@/lib/helpers/getUserInfo";
 
-export default async function AdminLayout({
+export default async function OrganizerLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -16,7 +16,7 @@ export default async function AdminLayout({
 
   try {
     const userInfo = await getUserInfo();
-    if (!userInfo || userInfo.roleId < 1) {
+    if (!userInfo || userInfo.roleId != 2) {
       redirect("/403");
     }
   } catch (err) {

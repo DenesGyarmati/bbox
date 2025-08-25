@@ -22,24 +22,65 @@ use App\Models\Event;
  */
 class EventController extends Controller
 {
-    /** 
+    /**
      * @OA\Get(
-     *     path="/api/events",
+     *     path="/api/v1/events",
      *     summary="Retrieve a list of events",
+     *     @OA\Parameter(
+     *         name="search",
+     *         in="query",
+     *         description="Search term for event title",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="location",
+     *         in="query",
+     *         description="Filter by location",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="category",
+     *         in="query",
+     *         description="Filter by category",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="per_page",
+     *         in="query",
+     *         description="Number of items per page",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=12)
+     *     ),
+     *     @OA\Parameter(
+     *         name="page",
+     *         in="query",
+     *         description="Page number",
+     *         required=false,
+     *         @OA\Schema(type="integer", default=1)
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="A list of events",
      *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(
-     *                 type="object",
-     *                 title="Event",
-     *                 required={"id", "title", "starts_at", "status"},
-     *                 @OA\Property(property="id", type="integer", example=1),
-     *                 @OA\Property(property="title", type="string", example="Sample Event"),
-     *                 @OA\Property(property="starts_at", type="string", format="date-time", example="2025-08-23T14:00:00Z"),
-     *                 @OA\Property(property="status", type="string", enum={"draft", "published", "cancelled"}, example="published")
-     *             )
+     *             type="object",
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     required={"id","title","starts_at","status"},
+     *                     @OA\Property(property="id", type="integer", example=1),
+     *                     @OA\Property(property="title", type="string", example="Sample Event"),
+     *                     @OA\Property(property="starts_at", type="string", format="date-time", example="2025-08-23T14:00:00Z"),
+     *                     @OA\Property(property="status", type="string", enum={"draft","published","cancelled"}, example="published"),
+     *                     @OA\Property(property="reserved_quantity", type="integer", example=5)
+     *                 )
+     *             ),
+     *             @OA\Property(property="links", type="object"),
+     *             @OA\Property(property="meta", type="object")
      *         )
      *     )
      * )
@@ -52,7 +93,9 @@ class EventController extends Controller
         $perPage = $request->input('per_page', 12);
         $page = $request->input('page', 1);
 
-        $events = Event::with('reservations')
+        $events = Event::query()
+            ->with('reservations')
+            ->withSum('reservations as reserved_quantity', 'quantity')
             ->where('status', 'published')
             ->when($search, function ($query, $search) {
                 $search = strtolower($search);
@@ -66,6 +109,11 @@ class EventController extends Controller
             ->when($category, function ($query, $category) {
                 $query->where('category', $category);
             })
+            ->select('events.*')
+            ->selectRaw('COALESCE(SUM(reservations.quantity), 0) as reserved_quantity')
+            ->leftJoin('reservations', 'reservations.event_id', '=', 'events.id')
+            ->groupBy('events.id')
+            ->havingRaw('COALESCE(SUM(reservations.quantity), 0) < events.capacity')
             ->orderBy('starts_at', 'asc')
             ->paginate($perPage, ['*'], 'page', $page);
 
@@ -73,17 +121,13 @@ class EventController extends Controller
     }
 
     /**
-     * Organizators events paginates everything to 12/page
+     * Summary of my
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function my(Request $request)
     {
         $userId = $request->user->id;
-
-        $events = Event::with('reservations')
-            ->where('owner_id', $userId)
-            ->orderBy('starts_at', 'asc')
-            ->paginate(12);
-
         $page = $request->input('page', 1);
         $perPage = $request->input('per_page', 12);
 
@@ -94,7 +138,11 @@ class EventController extends Controller
 
         return response()->json($events);
     }
-    
+    /**
+     * Summary of store
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function store(Request $request)
     {
         $userId = $request->user->id;
@@ -127,7 +175,12 @@ class EventController extends Controller
             'event'   => $event,
         ], 201);
     }
-    
+    /**
+     * Summary of update
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\Event $event
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function update(Request $request, Event $event)
     {
         $userId = $request->user->id;
@@ -165,7 +218,10 @@ class EventController extends Controller
     }
 
     /**
-     * Update the event status published/draft/cancelled
+     * Summary of status
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\Event $event
+     * @return \Illuminate\Http\JsonResponse
      */
     public function status(Request $request, Event $event)
     {
@@ -189,7 +245,12 @@ class EventController extends Controller
         ]);
     }
 
-    
+    /**
+     * Summary of show
+     * @param \Illuminate\Http\Request $request
+     * @param mixed $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function show(Request $request, $id)
     {
         $userId = optional($request->user)->id;
@@ -201,18 +262,28 @@ class EventController extends Controller
             ], 404);
         }
 
-        if (!$userId) {
-            $event->setRelation('reservations', collect());
-        } elseif ($event->owner_id !== $userId) {
+        $totalReserved = $event->reservations->sum('quantity');
+        $remainingCapacity = max($event->capacity - $totalReserved, 0);
+
+        $event->remaining_capacity = $remainingCapacity;
+        $event->reserved_quantity = $totalReserved;
+
+        if ($userId && $event->owner_id !== $userId) {
             $event->setRelation(
                 'reservations',
                 $event->reservations->where('user_id', $userId)->values()
             );
+        } elseif (!$userId) {
+            $event->setRelation('reservations', collect());
         }
 
         return response()->json($event);
     }
-
+    /**
+     * Summary of filter
+     * @param \Illuminate\Http\Request $request
+     * @return array{categories: mixed, locations: mixed}
+     */
     public function filter(Request $request)
     {
         $locations = Event::where('status', 'published')

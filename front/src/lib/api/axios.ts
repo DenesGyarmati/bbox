@@ -43,7 +43,7 @@ axiosServer.interceptors.request.use(
 );
 
 axiosServer.interceptors.response.use(
-  (response: AxiosResponse) => response.data,
+  (response: AxiosResponse) => response,
   (error: AxiosError<ErrorResponse>) => {
     const normalizedError: NormalizedError = {
       status: error.response?.status || 500,
@@ -55,13 +55,21 @@ axiosServer.interceptors.response.use(
 );
 
 async function axiosWrapper<T = any>(
-  request: Promise<any>
-): Promise<{ data: T | null; error: NormalizedError | null }> {
+  request: Promise<AxiosResponse<T>>
+): Promise<{ data: T | null; status: number; error: NormalizedError | null }> {
   try {
-    const data: T = await request;
-    return { data, error: null };
+    const response = await request;
+    return {
+      data: response.data,
+      status: response.status,
+      error: null,
+    };
   } catch (error: any) {
-    return { data: null, error };
+    return {
+      data: null,
+      status: error.status || 500,
+      error,
+    };
   }
 }
 

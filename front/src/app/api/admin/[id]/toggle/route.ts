@@ -1,23 +1,26 @@
 import { NextResponse } from "next/server";
 import { apiPatch } from "@/lib/api/axios";
+import { AdminEP } from "@/lib/api/ep";
 
 export async function PATCH(req: Request, context: { params: { id: string } }) {
-  try {
-    const { params } = await context;
-    const userId = params.id;
+  const { params } = await context;
+  const userId = params.id;
 
-    const body = await req.json();
-    const { is_active } = body;
+  const body = await req.json();
+  const { is_active } = body;
 
-    const data = await apiPatch(`/users/${userId}/activate`, { is_active });
+  const { data, status, error } = await apiPatch(
+    `${AdminEP.USERS}/${userId}${AdminEP.ACTIVATE}`,
+    {
+      is_active,
+    }
+  );
 
-    return NextResponse.json(data);
-  } catch (error: any) {
-    console.error("Proxy error:", error);
-
+  if (error) {
     return NextResponse.json(
-      { error: error?.response?.data || "Failed to toggle user status" },
-      { status: error?.response?.status || 500 }
+      { error: error.message, defaults: error.data },
+      { status: error.status }
     );
   }
+  return NextResponse.json(data, { status });
 }

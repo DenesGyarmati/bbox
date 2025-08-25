@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import axios from "axios";
+import { usePopup } from "@/context/PopupContext";
 
 interface Event {
   id: number;
@@ -12,15 +13,16 @@ export default function EventActions({ event }: { event: Event }) {
   const [status, setStatus] = useState(event.status);
   const [isPending, startTransition] = useTransition();
 
+  const { showError } = usePopup();
+
   const updateStatus = async (newStatus: Event["status"]) => {
     try {
       const res = await axios.patch(`/api/events/${event.id}`, {
         status: newStatus,
       });
-      console.log(res, event.id);
       startTransition(() => setStatus(newStatus));
     } catch {
-      alert("Failed to update status");
+      showError({ title: "Failed to update status" });
     }
   };
 

@@ -1,35 +1,36 @@
+import AdminPagination from "@/components/AdminPagination";
+import Reservation from "@/components/Reservation";
 import { apiGet } from "@/lib/api/axios";
+import { ResEP } from "@/lib/api/ep";
+import { Reserve } from "@/lib/commonTypes";
 import Link from "next/link";
 
-interface Reservation {
-  id: number;
-  event_title: string;
-  event_id: number;
-  quantity: number;
+interface ReservationsPageProps {
+  searchParams: { page?: string };
 }
 
-export default async function ReservationsPage() {
-  const { data, error } = await apiGet(`/reservations`);
-  const reservations: Reservation[] = data.data;
+export default async function ReservationsPage({
+  searchParams,
+}: ReservationsPageProps) {
+  const params = await searchParams;
+  const page = Number(params?.page) || 1;
+  const { data, error } = await apiGet(`${ResEP.BASE}?page=${page}`);
+  const reservations: Reserve[] = data.data;
+  const totalPages = data.last_page;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <h1 className="text-2xl font-bold mb-6">My Reservations</h1>
       {reservations.map((res) => (
-        <div
+        <Link
           key={res.id}
-          className="p-6 bg-white rounded shadow hover:shadow-lg transition w-full"
+          href={`/event/${res.event_id}`}
+          className="block p-4 bg-white rounded shadow hover:shadow-lg transition w-full"
         >
-          <h2 className="text-xl font-semibold">{res.event_title}</h2>
-          <div className="mt-2 space-y-1 text-gray-700">
-            <Link href={`/event/${res.event_id}`}>
-              <p>
-                <strong>Quantity:</strong> {res.quantity}
-              </p>
-            </Link>
-          </div>
-        </div>
+          <Reservation key={res.id} res={res} />
+        </Link>
       ))}
+      <AdminPagination page={page} totalPages={totalPages} />
     </div>
   );
 }

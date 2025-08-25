@@ -11,16 +11,20 @@ use Illuminate\Support\Facades\DB;
 class ReservationController extends Controller
 {
     /**
+     * Summary of reserve
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\Event $event
+     * @return \Illuminate\Http\JsonResponse
+     * 
      * Creates or updates a reservation 
      * rules:
      * 1 user for 1 event max 5 reservation
-     * 
      */
     public function reserve(Request $request, Event $event)
     {
         $userId = $request->user->id;
-        
-        if ($event->owner_id === $userId){
+
+        if ($event->owner_id === $userId) {
             return response()->json(['message' => "Can't make reservations for your own event"], 403);
         }
 
@@ -31,41 +35,21 @@ class ReservationController extends Controller
         $reservation = DB::transaction(function () use ($event, $userId, $validated) {
             $event = Event::where('id', $event->id)->lockForUpdate()->first();
 
-            $currentReserved = $event->reservations()->sum('quantity');
+            $userReservation = $event->reservations()->where('user_id', $userId)->first();
+            $userQuantity = $userReservation ? $userReservation->quantity : 0;
+            $otherReserved = $event->reservations()->sum('quantity') - $userQuantity;
+            $available = max($event->capacity - $otherReserved, 0);
 
-            $available = max($event->capacity - $currentReserved, 0);
-
-            if ($available <= 0) {
-                return response()->json(['message' => 'No spots left for this event'], 422);
-            }
-
-            $reservation = Reservation::where('user_id', $userId)
-                ->where('event_id', $event->id)
-                ->first();
-
-            if ($reservation) {
-                $newQuantity = $reservation->quantity + $validated['quantity'];
-
-                if ($newQuantity > 5) {
-                    return response()->json([
-                        'message' => 'You cannot reserve more than 5 tickets for this event'
-                    ], 422);
-                }
-
-                if ($newQuantity > $available) {
-                    return response()->json([
-                        'message' => "Only {$available} spots left for this event"
-                    ], 422);
-                }
-
-                $reservation->update(['quantity' => $newQuantity]);
-                return $reservation;
-            }
-
-            if ($validated['quantity'] > $available) {
+            $newQuantity = $userQuantity + $validated['quantity'];
+            if ($newQuantity > 5 || $newQuantity > $available) {
                 return response()->json([
-                    'message' => "Only {$available} spots left for this event"
+                    'message' => "There are not enough tickets left"
                 ], 422);
+            }
+
+            if ($userReservation) {
+                $userReservation->update(['quantity' => $newQuantity]);
+                return $userReservation;
             }
 
             return Reservation::create([
@@ -82,18 +66,26 @@ class ReservationController extends Controller
         return response()->json([
             'message' => 'Reservation successfully placed/updated',
             'reservation' => $reservation,
+            'event_price' => $event->price,
         ]);
     }
-
+    /**
+     * Summary of reservations
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function reservations(Request $request)
     {
         $userId = $request->user->id;
+
+        $perPage = $request->input('per_page', 20);
+        $page = $request->input('page', 1);
         
         $reservations = Reservation::where('user_id', $userId)
-            ->with('event:id,title')
-            ->paginate(12);
+            ->with('event:id,title,price')
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage, ['*'], 'page', $page);
 
         return response()->json($reservations);
-
     }
 }

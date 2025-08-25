@@ -15,7 +15,6 @@ export default async function getUserInfo() {
       roleId: decoded.roleId,
     };
   } catch (err) {
-    console.error("JWT verify error:", err);
     return null;
   }
 }

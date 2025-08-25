@@ -1,26 +1,29 @@
+import AdminPagination from "@/components/AdminPagination";
 import { apiGet } from "@/lib/api/axios";
+import { AdminEP } from "@/lib/api/ep";
 import { Event } from "@/lib/commonTypes";
+import { formatDate } from "@/lib/helpers/formatDate";
 
-export default async function EventsPage() {
-  let events: Event[] = [];
-  let error = "";
+interface EventsPageProps {
+  searchParams: { page?: string };
+}
 
-  try {
-    const { data } = await apiGet("/admin/events");
-    events = data ? data.data : [];
-  } catch (err: any) {
-    console.log(err);
-    error =
-      err.response?.data?.error ||
-      err.message ||
-      "Failed to fetch users from API";
-  }
+export default async function EventsPage({ searchParams }: EventsPageProps) {
+  const params = await searchParams;
+  const page = Number(params?.page) || 1;
+  const { data, status, error } = await apiGet(
+    `${AdminEP.EVENTS}?page=${page}`
+  );
+  const events: Event[] = data.data;
+  const totalPages = data.last_page;
 
   return (
     <>
       <h1 className="text-3xl font-bold mb-6">Admin - Events</h1>
 
-      {error && <p className="text-red-500 mb-4">{error}</p>}
+      {error && (
+        <p className="text-red-500 mb-4">Failed to load events: {status}</p>
+      )}
 
       {events.length > 0 ? (
         <div className="space-y-8">
@@ -35,8 +38,7 @@ export default async function EventsPage() {
                 </h2>
                 <p className="mb-2 text-gray-900">{event.description}</p>
                 <p className="text-gray-900">
-                  <strong>Starts at:</strong>{" "}
-                  {new Date(event.starts_at).toLocaleString()}
+                  <strong>Starts at:</strong> {formatDate(event.starts_at)}
                 </p>
                 <p className="text-gray-900">
                   <strong>Location:</strong> {event.location || "N/A"}
@@ -56,11 +58,14 @@ export default async function EventsPage() {
               </div>
               {event.reservations && event.reservations.length > 0 ? (
                 <div>
-                  <h3 className="text-xl font-semibold mb-3">Reservations</h3>
+                  <h3 className="text-xl font-semibold mb-3 text-gray-900">
+                    Reservations
+                  </h3>
                   <table className="w-full border-collapse bg-gray-50 rounded-lg overflow-hidden">
                     <thead className="bg-gray-200">
                       <tr>
                         <th className="p-3 text-left text-gray-900">User</th>
+                        <th className="p-3 text-left text-gray-900">User ID</th>
                         <th className="p-3 text-left text-gray-900">
                           Quantity
                         </th>
@@ -76,14 +81,15 @@ export default async function EventsPage() {
                       {event.reservations?.map((res) => (
                         <tr key={res.id} className="border-b hover:bg-gray-100">
                           <td className="p-3 text-gray-900">
-                            {res.user?.name || "Unknown"}
+                            {res.user?.name}
                           </td>
+                          <td className="p-3 text-gray-900">{res.user?.id}</td>
                           <td className="p-3 text-gray-900">{res.quantity}</td>
                           <td className="p-3 text-gray-900">
-                            {new Date(res.created_at).toLocaleString()}
+                            {formatDate(res.created_at)}
                           </td>
                           <td className="p-3 text-gray-900">
-                            {new Date(res.updated_at).toLocaleString()}
+                            {formatDate(res.updated_at)}
                           </td>
                         </tr>
                       ))}
@@ -95,6 +101,7 @@ export default async function EventsPage() {
               )}
             </div>
           ))}
+          <AdminPagination page={page} totalPages={totalPages} />
         </div>
       ) : !error ? (
         <p>Loading events...</p>

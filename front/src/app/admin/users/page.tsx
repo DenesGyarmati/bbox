@@ -17,24 +17,16 @@ interface User {
 
 export default async function UsersPage() {
   let users: User[] = [];
-  let error = "";
 
-  try {
-    const { data } = await apiGet<User[]>(AdminEP.USERS);
-    users = data ? data : [];
-  } catch (err: any) {
-    console.log(err);
-    error =
-      err.response?.data?.error ||
-      err.message ||
-      "Failed to fetch users from API";
-  }
-
+  const { data, status, error } = await apiGet<User[]>(AdminEP.USERS);
+  users = data ? data : [];
   return (
     <>
       <h1 className="text-3xl font-bold mb-6">Admin - Users</h1>
 
-      {error && <p className="text-red-500 mb-4">{error}</p>}
+      {error && (
+        <p className="text-red-500 mb-4">Failed to load users: {status}</p>
+      )}
 
       {users.length > 0 ? (
         <table className="w-full border-collapse bg-white rounded-lg shadow-md overflow-hidden">

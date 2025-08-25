@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { EventFormValues, eventSchema } from "@/lib/validation/eventSchema";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { usePopup } from "@/context/PopupContext";
 
 interface Props {
   eventId?: string;
@@ -14,6 +15,8 @@ interface Props {
 export default function EventForm({ eventId, initialData }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+
+  const { showError, showPopup } = usePopup();
 
   const {
     register,
@@ -40,21 +43,26 @@ export default function EventForm({ eventId, initialData }: Props) {
       });
 
       if (!res.ok) {
-        const err = await res.json();
-        console.error(`Failed to ${eventId ? "update" : "create"} event:`, err);
+        showError({
+          title: "Error",
+          body: `Failed to ${eventId ? "update" : "create"} event`,
+        });
         return;
       }
-
       const savedEvent = await res.json();
-      console.log(savedEvent);
-
       if (eventId) {
         router.push(`/event/${eventId}`);
       } else {
-        router.push(`/event/${savedEvent.data.event.id}`);
+        router.push(`/event/${savedEvent.event.id}`);
       }
+      showPopup({
+        title: "Success!",
+        body: `Successfuly ${eventId ? "updated" : "created"} event`,
+        type: "toast",
+        status: "success",
+      });
     } catch (err) {
-      console.error("Unexpected error:", err);
+      showError();
     } finally {
       setLoading(false);
     }
@@ -108,7 +116,7 @@ export default function EventForm({ eventId, initialData }: Props) {
         type="number"
         placeholder="Price"
         className="w-full p-2 border rounded"
-        disabled={!!eventId} // lock price for edits
+        disabled={!!eventId}
       />
 
       <select {...register("status")} className="w-full p-2 border rounded">

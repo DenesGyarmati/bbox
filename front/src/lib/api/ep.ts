@@ -5,8 +5,17 @@ const AuthEP = {
 };
 const AdminEP = {
   USERS: "/users",
+  ACTIVATE: "/activate",
+  EVENTS: "/admin/events",
 };
 const EventEP = {
-  GET: "/events?page=1&per_page=12",
+  BASE: "/events",
+  STATUS: "/status",
+  MY: "/events/my",
+  EVENT: "/event",
 };
-export { AuthEP, EventEP, AdminEP };
+const ResEP = {
+  RESERVE: "/reserve/",
+  BASE: "/reservations",
+};
+export { AuthEP, EventEP, AdminEP, ResEP };

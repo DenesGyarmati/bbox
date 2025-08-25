@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 /** 
  * @OA\Info(
- *     title="Your API Title",
+ *     title="BBOX API",
  *     version="1.0.0",
- *     description="Description of your API"
+ *     description="Event management system"
  * )
  */
 abstract class Controller

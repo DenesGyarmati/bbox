@@ -11,9 +11,15 @@ type PopupOptions = {
   type?: PopupType;
 };
 
+type ErrorOptions = {
+  title?: string;
+  body?: string;
+};
+
 type PopupContextType = {
   showPopup: (options: PopupOptions) => void;
   hidePopup: () => void;
+  showError: (options?: ErrorOptions) => void;
 };
 
 const PopupContext = createContext<PopupContextType | undefined>(undefined);
@@ -26,6 +32,16 @@ export function PopupProvider({ children }: { children: ReactNode }) {
     if (options.type === "toast") {
       setTimeout(() => setPopup(null), 3000);
     }
+  };
+
+  const showError = (options?: ErrorOptions) => {
+    setPopup({
+      title: options?.title ?? "Unexpected error",
+      body: options?.body ?? "Please try again later",
+      type: "toast",
+      status: "error",
+    });
+    setTimeout(() => setPopup(null), 3000);
   };
 
   const hidePopup = () => setPopup(null);
@@ -43,7 +59,7 @@ export function PopupProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <PopupContext.Provider value={{ showPopup, hidePopup }}>
+    <PopupContext.Provider value={{ showPopup, hidePopup, showError }}>
       {children}
 
       {popup && popup.type === "modal" && (
@@ -54,7 +70,10 @@ export function PopupProvider({ children }: { children: ReactNode }) {
             )}`}
           >
             <h2 className="text-lg font-bold">{popup.title}</h2>
-            <p className="mt-2">{popup.body}</p>
+            <div
+              className="mt-2 space-y-1"
+              dangerouslySetInnerHTML={{ __html: popup.body }}
+            />
             <button
               onClick={hidePopup}
               className="mt-4 px-4 py-2 bg-white text-black rounded-xl"
@@ -87,3 +106,5 @@ export function usePopup() {
   }
   return context;
 }
+
+export function useError() {}

@@ -1,6 +1,7 @@
 import { apiGet } from "@/lib/api/axios";
 import EventForm from "../../create/EventForm";
 import { notFound } from "next/navigation";
+import { EventEP } from "@/lib/api/ep";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -8,7 +9,7 @@ interface Props {
 
 export default async function EditEventPage({ params }: Props) {
   const { id } = await params;
-  const { data, error } = await apiGet(`/event/${id}`);
+  const { data, error } = await apiGet(`${EventEP.EVENT}/${id}`);
 
   if (error) {
     return notFound();

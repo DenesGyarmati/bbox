@@ -16,7 +16,7 @@ export default async function AdminLayout({
 
   try {
     const userInfo = await getUserInfo();
-    if (!userInfo || userInfo.roleId < 1) {
+    if (!userInfo || userInfo.roleId != 2) {
       redirect("/403");
     }
   } catch (err) {

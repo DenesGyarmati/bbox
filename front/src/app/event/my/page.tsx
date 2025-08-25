@@ -3,6 +3,7 @@ import EventActions from "@/components/EventActions";
 import { formatDate } from "@/lib/helpers/formatDate";
 import { Event } from "@/lib/commonTypes";
 import AdminPagination from "@/components/AdminPagination";
+import { EventEP } from "@/lib/api/ep";
 
 interface MyEventsPageProps {
   searchParams: { page?: string };
@@ -11,8 +12,9 @@ interface MyEventsPageProps {
 export default async function MyEventsPage({
   searchParams,
 }: MyEventsPageProps) {
-  const page = Number(searchParams.page) || 1;
-  const { data } = await apiGet(`/events/my?page=${page}`);
+  const params = await searchParams;
+  const page = Number(params?.page) || 1;
+  const { data } = await apiGet(`${EventEP.MY}?page=${page}`);
   const events: Event[] = data.data;
   const totalPages = data.last_page;
 

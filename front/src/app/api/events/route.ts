@@ -1,67 +1,56 @@
 import { NextResponse } from "next/server";
 import { eventSchema } from "@/lib/validation/eventSchema";
 import { apiPost, apiGet } from "@/lib/api/axios";
+import { EventEP } from "@/lib/api/ep";
 
 export async function POST(req: Request) {
-  try {
-    const body = await req.json();
+  const body = await req.json();
 
-    const parsed = eventSchema.parse(body);
-
-    const data = await apiPost("/events", parsed);
-
-    return NextResponse.json(data, { status: 201 });
-  } catch (error: any) {
-    console.error("Event creation error:", error);
-
-    if (error.name === "ZodError") {
-      return NextResponse.json(
-        { error: "Validation failed", details: error.errors },
-        { status: 422 }
-      );
-    }
-
+  const parsed = eventSchema.safeParse(body);
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: error?.response?.data || "Failed to create event" },
-      { status: error?.response?.status || 500 }
+      { error: "Validation failed", details: parsed.error },
+      { status: 422 }
     );
   }
+
+  const { data, error, status } = await apiPost(EventEP.BASE, parsed.data);
+
+  if (error) {
+    return NextResponse.json(
+      { error: error.message, details: error.data },
+      { status: error.status ?? 500 }
+    );
+  }
+
+  return NextResponse.json(data, { status: status ?? 201 });
 }
 
 export async function GET(req: Request) {
-  try {
-    const { searchParams } = new URL(req.url);
+  const { searchParams } = new URL(req.url);
 
-    const page = searchParams.get("page") || "1";
-    const perPage = searchParams.get("per_page") || "12";
-    const search = searchParams.get("search") || "";
-    const location = searchParams.get("location") || "";
-    const category = searchParams.get("category") || "";
+  const query = new URLSearchParams({
+    page: searchParams.get("page") ?? "1",
+    per_page: searchParams.get("per_page") ?? "12",
+    search: searchParams.get("search") ?? "",
+    ...(searchParams.get("location")
+      ? { location: searchParams.get("location")! }
+      : {}),
+    ...(searchParams.get("category")
+      ? { category: searchParams.get("category")! }
+      : {}),
+  });
 
-    const query = new URLSearchParams({
-      page,
-      per_page: perPage,
-      search,
-      ...(location && { location }),
-      ...(category && { category }),
-    });
+  const { data, error, status } = await apiGet(
+    `${EventEP.BASE}?${query.toString()}`
+  );
 
-    const { data, error } = await apiGet(`/events?${query.toString()}`);
-
-    if (error) {
-      return NextResponse.json(
-        { error: error.message, details: error.data },
-        { status: error.status }
-      );
-    }
-
-    return NextResponse.json(data, { status: 200 });
-  } catch (error: any) {
-    console.error("Event fetch error:", error);
-
+  if (error) {
     return NextResponse.json(
-      { error: "Failed to fetch events" },
-      { status: 500 }
+      { error: error.message, details: error.data },
+      { status: error.status ?? 500 }
     );
   }
+
+  return NextResponse.json(data, { status: status ?? 200 });
 }

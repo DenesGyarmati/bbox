@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { apiPost } from "@/lib/api/axios";
+import { ResEP } from "@/lib/api/ep";
 
 export async function POST(
   req: Request,
@@ -7,18 +8,16 @@ export async function POST(
 ) {
   const { params } = context;
   const eventId = params.eventId;
-  try {
-    const body = await req.json();
 
-    const data = await apiPost(`/reserve/${eventId}`, body);
+  const body = await req.json();
+  const { data, status, error } = await apiPost(`${ResEP}${eventId}`, body);
 
-    return NextResponse.json(data, { status: 201 });
-  } catch (error: any) {
-    console.error("Reservation error:", error);
-
+  if (error) {
     return NextResponse.json(
-      { error: error?.response?.data || "Failed to make reservation" },
-      { status: error?.response?.status || 500 }
+      { error: error.message, defaults: error.data },
+      { status: error.status ?? 500 }
     );
   }
+
+  return NextResponse.json(data, { status: status ?? 200 });
 }

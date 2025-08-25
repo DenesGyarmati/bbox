@@ -45,7 +45,7 @@ class AdminController extends Controller
 
     public function events(Request $request)
     {
-        $events = Event::with('reservations')
+        $events = Event::with(['reservations.user:id,name'])
             ->orderBy('starts_at', 'asc')
             ->paginate(12);
 

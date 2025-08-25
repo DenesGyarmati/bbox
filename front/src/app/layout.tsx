@@ -26,7 +26,6 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         isLoggedIn = true;
       }
     } catch (err) {
-      console.error("JWT error:", err);
       isLoggedIn = false;
     }
   }
